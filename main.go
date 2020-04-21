@@ -26,8 +26,8 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	batchv1 "github.com/thephw/kbt/api/v1"
-	"github.com/thephw/kbt/controllers"
+	batchv1 "tutorial.kubebuilder.io/project/api/v1"
+	"tutorial.kubebuilder.io/project/controllers"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -46,7 +46,7 @@ func init() {
 func main() {
 	var metricsAddr string
 	var enableLeaderElection bool
-	flag.StringVar(&metricsAddr, "metrics-addr", ":8080", "The address the metric endpoint binds to.")
+	flag.StringVar(&metricsAddr, "metrics-addr", "localhost:8080", "The address the metric endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "enable-leader-election", false,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
@@ -60,6 +60,7 @@ func main() {
 		Port:               9443,
 		LeaderElection:     enableLeaderElection,
 		LeaderElectionID:   "62937972.tutorial.kubebuilder.io",
+		CertDir:            os.Getenv("PWD"),
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
@@ -67,22 +68,30 @@ func main() {
 	}
 
 	if err = (&controllers.CronJobReconciler{
-        Client: mgr.GetClient(),
-        Log:    ctrl.Log.WithName("controllers").WithName("Captain"),
-        Scheme: mgr.GetScheme(),
-    }).SetupWithManager(mgr); err != nil {
-        setupLog.Error(err, "unable to create controller", "controller", "Captain")
-        os.Exit(1)
-    }
+		Client: mgr.GetClient(),
+		Log:    ctrl.Log.WithName("controllers").WithName("Captain"),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Captain")
+		os.Exit(1)
+	}
+	if err = (&batchv1.CronJob{}).SetupWebhookWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create webhook", "webhook", "CronJob")
+		os.Exit(1)
+	}
 	// +kubebuilder:scaffold:builder
 
 	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
-        if err = (&batchv1.CronJob{}).SetupWebhookWithManager(mgr); err != nil {
-            setupLog.Error(err, "unable to create webhook", "webhook", "Captain")
-            os.Exit(1)
-        }
-    }
-    // +kubebuilder:scaffold:builder
+		if err = (&batchv1.CronJob{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "Captain")
+			os.Exit(1)
+		}
+	}
+	if err = (&batchv1.CronJob{}).SetupWebhookWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create webhook", "webhook", "CronJob")
+		os.Exit(1)
+	}
+	// +kubebuilder:scaffold:builder
 
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
