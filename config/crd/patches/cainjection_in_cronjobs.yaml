@@ -6,3 +6,5 @@ metadata:
   annotations:
     cert-manager.io/inject-ca-from: $(CERTIFICATE_NAMESPACE)/$(CERTIFICATE_NAME)
   name: cronjobs.batch.tutorial.kubebuilder.io
+spec:
+  preserveUnknownFields: false
