@@ -1,6 +1,12 @@
 # Build the manager binary
 FROM golang:1.13 as builder
 
+ARG CRICTLVERSION="v1.17.0"
+
+RUN curl -L https://github.com/kubernetes-sigs/cri-tools/releases/download/$CRICTLVERSION/crictl-${CRICTLVERSION}-linux-amd64.tar.gz --output crictl-${CRICTLVERSION}-linux-amd64.tar.gz && \
+    tar zxvf crictl-$CRICTLVERSION-linux-amd64.tar.gz -C /usr/local/bin && \
+    rm -f crictl-$CRICTLVERSION-linux-amd64.tar.gz
+
 WORKDIR /workspace
 # Copy the Go Modules manifests
 COPY go.mod go.mod
